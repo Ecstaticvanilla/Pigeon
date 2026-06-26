@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pigeon</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f0f10;
+      --surface:   #1a1a1c;
+      --border:    #2a2a2e;
+      --border-hi: #3a3a40;
+      --text:      #e8e8e8;
+      --muted:     #6b6b72;
+      --accent:    #5b6af5;
+      --accent-hi: #7080ff;
+      --danger:    #e05555;
+      --success:   #3dba7a;
+      --radius:    10px;
+      --font:      'Inter', system-ui, sans-serif;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--font);
+      font-size: 14px;
+      line-height: 1.6;
+      min-height: 100vh;
+    }
+
+    /* ── Auth screen ─────────────────────────────── */
+    #auth-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .auth-box {
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .auth-logo {
+      font-size: 20px;
+      font-weight: 600;
+      letter-spacing: -0.5px;
+      margin-bottom: 32px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: var(--text);
+    }
+
+    .auth-logo span {
+      width: 28px;
+      height: 28px;
+      background: var(--accent);
+      border-radius: 7px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 3px;
+      margin-bottom: 24px;
+      background: var(--surface);
+    }
+
+    .auth-tab {
+      flex: 1;
+      padding: 7px;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 13px;
+      color: var(--muted);
+      transition: all 0.15s;
+      user-select: none;
+    }
+
+    .auth-tab.active {
+      background: var(--border-hi);
+      color: var(--text);
+    }
+
+    .field { margin-bottom: 14px; }
+
+    .field label {
+      display: block;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+      letter-spacing: 0.2px;
+    }
+
+    .field input {
+      width: 100%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 10px 12px;
+      color: var(--text);
+      font-size: 14px;
+      font-family: var(--font);
+      outline: none;
+      transition: border-color 0.15s;
+    }
+
+    .field input:focus { border-color: var(--accent); }
+
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-family: var(--font);
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    .btn:hover { opacity: 0.88; }
+    .btn:active { opacity: 0.75; }
+    .btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    .btn-primary { background: var(--accent); color: #fff; }
+    .btn-ghost {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-danger { background: var(--danger); color: #fff; }
+
+    .btn-sm {
+      width: auto;
+      padding: 6px 12px;
+      font-size: 12px;
+    }
+
+    /* ── App shell ───────────────────────────────── */
+    #app-screen { display: none; min-height: 100vh; }
+
+    .topbar {
+      height: 52px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 24px;
+      position: sticky;
+      top: 0;
+      background: var(--bg);
+      z-index: 10;
+    }
+
+    .topbar-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.3px;
+    }
+
+    .topbar-left span {
+      width: 24px;
+      height: 24px;
+      background: var(--accent);
+      border-radius: 6px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+
+    .topbar-right {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .user-chip {
+      font-size: 12px;
+      color: var(--muted);
+      padding: 4px 10px;
+      border: 1px solid var(--border);
+      border-radius: 20px;
+    }
+
+    .main { display: flex; min-height: calc(100vh - 52px); }
+
+    /* ── Sidebar ─────────────────────────────────── */
+    .sidebar {
+      width: 200px;
+      border-right: 1px solid var(--border);
+      padding: 20px 12px;
+      flex-shrink: 0;
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      color: var(--muted);
+      transition: all 0.12s;
+      user-select: none;
+    }
+
+    .nav-item:hover { background: var(--surface); color: var(--text); }
+    .nav-item.active { background: var(--surface); color: var(--text); }
+
+    .nav-icon {
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+      opacity: 0.7;
+    }
+
+    .nav-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 10px 4px;
+    }
+
+    /* ── Content area ────────────────────────────── */
+    .content { flex: 1; padding: 28px 32px; overflow: auto; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+    }
+
+    .page-title {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.4px;
+    }
+
+    /* ── Upload zone ─────────────────────────────── */
+    .upload-zone {
+      border: 1.5px dashed var(--border-hi);
+      border-radius: var(--radius);
+      padding: 36px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s, background 0.15s;
+      margin-bottom: 28px;
+    }
+
+    .upload-zone:hover, .upload-zone.drag-over {
+      border-color: var(--accent);
+      background: rgba(91, 106, 245, 0.04);
+    }
+
+    .upload-zone input[type="file"] { display: none; }
+
+    .upload-icon {
+      width: 36px;
+      height: 36px;
+      margin: 0 auto 12px;
+      color: var(--muted);
+    }
+
+    .upload-zone p { color: var(--muted); font-size: 13px; }
+    .upload-zone strong { color: var(--text); }
+
+    /* ── File table ──────────────────────────────── */
+    .file-table { width: 100%; border-collapse: collapse; }
+
+    .file-table th {
+      text-align: left;
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 0 12px 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .file-table td {
+      padding: 12px;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+      vertical-align: middle;
+    }
+
+    .file-table tr:last-child td { border-bottom: none; }
+
+    .file-table tr:hover td { background: var(--surface); }
+
+    .file-name {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 500;
+    }
+
+    .file-ext {
+      width: 32px;
+      height: 32px;
+      border-radius: 7px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 9px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .file-meta { color: var(--muted); font-size: 12px; }
+
+    .badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .badge-private { background: rgba(107,107,114,0.15); color: var(--muted); }
+    .badge-shared  { background: rgba(91,106,245,0.15); color: var(--accent-hi); }
+    .badge-public  { background: rgba(61,186,122,0.15); color: var(--success); }
+
+    .row-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+    /* ── Share modal ─────────────────────────────── */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      padding: 24px;
+      display: none;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .modal {
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      border-radius: 14px;
+      padding: 24px;
+      width: 100%;
+      max-width: 400px;
+    }
+
+    .modal-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 18px;
+    }
+
+    .share-tabs {
+      display: flex;
+      gap: 0;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 3px;
+      margin-bottom: 18px;
+      background: var(--bg);
+    }
+
+    .share-tab {
+      flex: 1;
+      padding: 6px;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--muted);
+      transition: all 0.12s;
+      user-select: none;
+    }
+
+    .share-tab.active { background: var(--border-hi); color: var(--text); }
+
+    .share-panel { display: none; }
+    .share-panel.active { display: block; }
+
+    .copy-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .copy-input {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: var(--muted);
+      font-size: 12px;
+      font-family: monospace;
+      outline: none;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    /* ── Toast ───────────────────────────────────── */
+    #toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border-hi);
+      border-radius: var(--radius);
+      padding: 12px 16px;
+      font-size: 13px;
+      z-index: 200;
+      transform: translateY(80px);
+      opacity: 0;
+      transition: all 0.2s;
+      max-width: 300px;
+    }
+
+    #toast.show { transform: translateY(0); opacity: 1; }
+    #toast.success { border-left: 3px solid var(--success); }
+    #toast.error   { border-left: 3px solid var(--danger); }
+
+    /* ── Empty state ─────────────────────────────── */
+    .empty {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+
+    .empty p { margin-top: 8px; font-size: 13px; }
+
+    /* ── Progress bar ────────────────────────────── */
+    .upload-progress {
+      display: none;
+      margin-bottom: 20px;
+    }
+
+    .upload-progress.visible { display: block; }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .progress-bar {
+      height: 3px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      width: 0%;
+      transition: width 0.3s;
+    }
+
+    /* ── Shared with me ──────────────────────────── */
+    .shared-tag {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* ── Responsive ──────────────────────────────── */
+    @media (max-width: 640px) {
+      .sidebar { display: none; }
+      .content { padding: 20px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ── AUTH SCREEN ──────────────────────────────────────────────────────── -->
+<div id="auth-screen">
+  <div class="auth-box">
+    <div class="auth-logo">
+      <span>⬡</span> Pigeon
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" onclick="switchAuthTab('login')">Sign in</div>
+      <div class="auth-tab" onclick="switchAuthTab('register')">Register</div>
+    </div>
+
+    <!-- Login -->
+    <div id="login-form">
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="login-email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password"/>
+      </div>
+      <button class="btn btn-primary" onclick="handleLogin()" id="login-btn">Sign in</button>
+    </div>
+
+    <!-- Register -->
+    <div id="register-form" style="display:none">
+      <div class="field">
+        <label>Name</label>
+        <input type="text" id="reg-name" placeholder="Your name"/>
+      </div>
+      <div class="field">
+        <label>Email</label>
+        <input type="email" id="reg-email" placeholder="you@example.com" autocomplete="email"/>
+      </div>
+      <div class="field">
+        <label>Password</label>
+        <input type="password" id="reg-password" placeholder="Min. 6 characters" autocomplete="new-password"/>
+      </div>
+      <button class="btn btn-primary" onclick="handleRegister()" id="reg-btn">Create account</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── APP SCREEN ───────────────────────────────────────────────────────── -->
+<div id="app-screen">
+
+  <!-- Topbar -->
+  <div class="topbar">
+    <div class="topbar-left">
+      <span>⬡</span> Pigeon
+    </div>
+    <div class="topbar-right">
+      <div class="user-chip" id="user-chip">user@example.com</div>
+      <button class="btn btn-ghost btn-sm" onclick="logout()">Sign out</button>
+    </div>
+  </div>
+
+  <div class="main">
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="nav-item active" onclick="showPage('my-files', this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+        </svg>
+        My files
+      </div>
+      <div class="nav-item" onclick="showPage('shared', this)">
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+          <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+        </svg>
+        Shared with me
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content">
+
+      <!-- My Files page -->
+      <div class="page active" id="page-my-files">
+        <div class="page-header">
+          <div class="page-title">My files</div>
+          <label class="btn btn-primary btn-sm" style="cursor:pointer">
+            Upload
+            <input type="file" id="file-input" onchange="handleFileSelect(this)"/>
+          </label>
+        </div>
+
+        <!-- Upload zone -->
+        <div class="upload-zone" id="upload-zone" onclick="document.getElementById('file-input2').click()">
+          <input type="file" id="file-input2" onchange="handleFileSelect(this)"/>
+          <svg class="upload-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+          <p><strong>Drop a file here</strong> or click to browse</p>
+          <p style="margin-top:4px">PDF, DOCX, XLSX, images — up to 20 MB</p>
+        </div>
+
+        <!-- Progress -->
+        <div class="upload-progress" id="upload-progress">
+          <div class="progress-label">
+            <span id="progress-name">Uploading…</span>
+            <span id="progress-pct">0%</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill"></div>
+          </div>
+        </div>
+
+        <!-- File table -->
+        <table class="file-table" id="file-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Size</th>
+              <th>Uploaded</th>
+              <th>Access</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="file-list"></tbody>
+        </table>
+
+        <div class="empty" id="files-empty" style="display:none">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" style="margin:0 auto; color:var(--muted)">
+            <path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
+          </svg>
+          <p>No files yet. Upload one to get started.</p>
+        </div>
+      </div>
+
+      <!-- Shared with me page -->
+      <div class="page" id="page-shared">
+        <div class="page-header">
+          <div class="page-title">Shared with me</div>
+        </div>
+        <table class="file-table" id="shared-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Shared by</th>
+              <th>Size</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody id="shared-list"></tbody>
+        </table>
+        <div class="empty" id="shared-empty" style="display:none">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.3" style="margin:0 auto; color:var(--muted)">
+            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+          </svg>
+          <p>Nothing shared with you yet.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ── SHARE MODAL ──────────────────────────────────────────────────────── -->
+<div class="modal-backdrop" id="share-modal">
+  <div class="modal">
+    <div class="modal-title">Share file</div>
+
+    <div class="share-tabs">
+      <div class="share-tab active" onclick="switchShareTab('user')">Invite user</div>
+      <div class="share-tab" onclick="switchShareTab('public')">Public link</div>
+    </div>
+
+    <!-- Invite user -->
+    <div class="share-panel active" id="share-user-panel">
+      <div class="field">
+        <label>Email address</label>
+        <input type="email" id="share-email" placeholder="colleague@example.com"/>
+      </div>
+      <div class="field">
+        <label>Permission</label>
+        <select id="share-perm" style="width:100%;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;color:var(--text);font-size:14px;outline:none;font-family:var(--font)">
+          <option value="view">View only</option>
+          <option value="download">Can download</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Public link -->
+    <div class="share-panel" id="share-public-panel">
+      <p style="color:var(--muted);font-size:13px">Anyone with this link can download the file — no account needed.</p>
+      <div class="copy-row">
+        <input type="text" class="copy-input" id="public-link-input" readonly placeholder="Click Generate to create a link"/>
+        <button class="btn btn-ghost btn-sm" onclick="copyPublicLink()">Copy</button>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" id="share-confirm-btn" onclick="confirmShare()">Share</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── TOAST ────────────────────────────────────────────────────────────── -->
+<div id="toast"></div>
+
+<script>
+  // ── CONFIG — point this at your Express server ─────────────────────────
+  // Change this when running locally or after deploying to EC2
+  const API = 'http://localhost:5000/api';
+
+  // ── State ───────────────────────────────────────────────────────────────
+  let token = localStorage.getItem('cv_token') || null;
+  let currentUser = JSON.parse(localStorage.getItem('cv_user') || 'null');
+  let shareDocId = null;
+  let shareTab = 'user';
+
+  // ── Boot ────────────────────────────────────────────────────────────────
+  if (token && currentUser) bootApp();
+
+  // ── Auth helpers ────────────────────────────────────────────────────────
+  function switchAuthTab(tab) {
+    document.querySelectorAll('.auth-tab').forEach((t, i) => {
+      t.classList.toggle('active', (i === 0 && tab === 'login') || (i === 1 && tab === 'register'));
+    });
+    document.getElementById('login-form').style.display    = tab === 'login'    ? 'block' : 'none';
+    document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+  }
+
+  async function handleLogin() {
+    const email    = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!email || !password) return toast('Fill in all fields', 'error');
+
+    const btn = document.getElementById('login-btn');
+    btn.disabled = true; btn.textContent = 'Signing in…';
+
+    /*
+     * API CALL: POST /api/auth/login
+     * Body: { email, password }
+     * Response: { success, token, user: { id, name, email } }
+     */
+    const res = await api('/auth/login', 'POST', { email, password });
+    btn.disabled = false; btn.textContent = 'Sign in';
+
+    if (res.success) {
+      token = res.token;
+      currentUser = res.user;
+      localStorage.setItem('cv_token', token);
+      localStorage.setItem('cv_user', JSON.stringify(currentUser));
+      bootApp();
+    } else {
+      toast(res.message || 'Login failed', 'error');
+    }
+  }
+
+  async function handleRegister() {
+    const name     = document.getElementById('reg-name').value.trim();
+    const email    = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    if (!name || !email || !password) return toast('Fill in all fields', 'error');
+
+    const btn = document.getElementById('reg-btn');
+    btn.disabled = true; btn.textContent = 'Creating account…';
+
+    /*
+     * API CALL: POST /api/auth/register
+     * Body: { name, email, password }
+     * Response: { success, token, user: { id, name, email } }
+     */
+    const res = await api('/auth/register', 'POST', { name, email, password });
+    btn.disabled = false; btn.textContent = 'Create account';
+
+    if (res.success) {
+      token = res.token;
+      currentUser = res.user;
+      localStorage.setItem('cv_token', token);
+      localStorage.setItem('cv_user', JSON.stringify(currentUser));
+      bootApp();
+    } else {
+      toast(res.message || 'Registration failed', 'error');
+    }
+  }
+
+  function logout() {
+    token = null; currentUser = null;
+    localStorage.removeItem('cv_token');
+    localStorage.removeItem('cv_user');
+    document.getElementById('app-screen').style.display = 'none';
+    document.getElementById('auth-screen').style.display = 'flex';
+  }
+
+  function bootApp() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('app-screen').style.display = 'block';
+    document.getElementById('user-chip').textContent = currentUser.email;
+    loadMyFiles();
+    loadSharedFiles();
+    setupDragDrop();
+  }
+
+  // ── Navigation ──────────────────────────────────────────────────────────
+  function showPage(id, el) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('page-' + id).classList.add('active');
+    el.classList.add('active');
+  }
+
+  // ── File upload ─────────────────────────────────────────────────────────
+  function handleFileSelect(input) {
+    if (input.files[0]) uploadFile(input.files[0]);
+    input.value = '';
+  }
+
+  function setupDragDrop() {
+    const zone = document.getElementById('upload-zone');
+    zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+    zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+    zone.addEventListener('drop', e => {
+      e.preventDefault();
+      zone.classList.remove('drag-over');
+      if (e.dataTransfer.files[0]) uploadFile(e.dataTransfer.files[0]);
+    });
+  }
+
+  async function uploadFile(file) {
+    const progress = document.getElementById('upload-progress');
+    const fill     = document.getElementById('progress-fill');
+    const pct      = document.getElementById('progress-pct');
+    const name     = document.getElementById('progress-name');
+
+    progress.classList.add('visible');
+    name.textContent = file.name;
+
+    // Fake progress for UX (XHR would give real progress)
+    let p = 0;
+    const tick = setInterval(() => {
+      p = Math.min(p + Math.random() * 15, 90);
+      fill.style.width = p + '%';
+      pct.textContent = Math.round(p) + '%';
+    }, 200);
+
+    /*
+     * API CALL: POST /api/docs/upload
+     * Header: Authorization: Bearer <token>
+     * Body: FormData with key "file"
+     * Response: { success, document: { _id, originalName, sizeBytes, visibility, createdAt } }
+     */
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await apiForm('/docs/upload', formData);
+    clearInterval(tick);
+
+    if (res.success) {
+      fill.style.width = '100%';
+      pct.textContent = '100%';
+      setTimeout(() => {
+        progress.classList.remove('visible');
+        fill.style.width = '0%';
+      }, 800);
+      toast('Uploaded', 'success');
+      loadMyFiles();
+    } else {
+      progress.classList.remove('visible');
+      fill.style.width = '0%';
+      toast(res.message || 'Upload failed', 'error');
+    }
+  }
+
+  // ── Load files ──────────────────────────────────────────────────────────
+  async function loadMyFiles() {
+    /*
+     * API CALL: GET /api/docs
+     * Header: Authorization: Bearer <token>
+     * Response: { success, documents: [ { _id, originalName, sizeBytes, visibility, createdAt } ] }
+     */
+    const res = await api('/docs');
+    const list = document.getElementById('file-list');
+    const empty = document.getElementById('files-empty');
+    list.innerHTML = '';
+
+    if (!res.success || !res.documents.length) {
+      empty.style.display = 'block';
+      return;
+    }
+
+    empty.style.display = 'none';
+    res.documents.forEach(doc => {
+      const ext = doc.originalName.split('.').pop().toUpperCase().slice(0, 4);
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>
+          <div class="file-name">
+            <div class="file-ext">${ext}</div>
+            <span>${doc.originalName}</span>
+          </div>
+        </td>
+        <td class="file-meta">${fmtBytes(doc.sizeBytes)}</td>
+        <td class="file-meta">${fmtDate(doc.createdAt)}</td>
+        <td><span class="badge badge-${doc.visibility}">${doc.visibility}</span></td>
+        <td>
+          <div class="row-actions">
+            <button class="btn btn-ghost btn-sm" onclick="downloadDoc('${doc._id}')">Download</button>
+            <button class="btn btn-ghost btn-sm" onclick="openShareModal('${doc._id}')">Share</button>
+            <button class="btn btn-sm" style="background:transparent;color:var(--danger);border:1px solid var(--border)" onclick="deleteDoc('${doc._id}', this)">Delete</button>
+          </div>
+        </td>`;
+      list.appendChild(row);
+    });
+  }
+
+  async function loadSharedFiles() {
+    /*
+     * API CALL: GET /api/docs/shared
+     * Header: Authorization: Bearer <token>
+     * Response: { success, documents: [ { _id, originalName, sizeBytes, owner: { name, email }, createdAt } ] }
+     */
+    const res = await api('/docs/shared');
+    const list  = document.getElementById('shared-list');
+    const empty = document.getElementById('shared-empty');
+    list.innerHTML = '';
+
+    if (!res.success || !res.documents.length) {
+      empty.style.display = 'block';
+      return;
+    }
+
+    empty.style.display = 'none';
+    res.documents.forEach(doc => {
+      const ext = doc.originalName.split('.').pop().toUpperCase().slice(0, 4);
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>
+          <div class="file-name">
+            <div class="file-ext">${ext}</div>
+            <span>${doc.originalName}</span>
+          </div>
+        </td>
+        <td class="file-meta">${doc.owner?.name || '—'}</td>
+        <td class="file-meta">${fmtBytes(doc.sizeBytes)}</td>
+        <td>
+          <div class="row-actions">
+            <button class="btn btn-ghost btn-sm" onclick="downloadDoc('${doc._id}')">Download</button>
+          </div>
+        </td>`;
+      list.appendChild(row);
+    });
+  }
+
+  // ── Download ────────────────────────────────────────────────────────────
+  async function downloadDoc(id) {
+    /*
+     * API CALL: GET /api/docs/:id/download
+     * Header: Authorization: Bearer <token>
+     * Response: { success, url, fileName }
+     * The url is a presigned S3 URL — open it directly in the browser.
+     */
+    const res = await api('/docs/' + id + '/download');
+    if (res.success) {
+      const a = document.createElement('a');
+      a.href = res.url;
+      a.download = res.fileName;
+      a.target = '_blank';
+      a.click();
+    } else {
+      toast(res.message || 'Could not get download link', 'error');
+    }
+  }
+
+  // ── Delete ──────────────────────────────────────────────────────────────
+  async function deleteDoc(id, btn) {
+    if (!confirm('Delete this file? This cannot be undone.')) return;
+    btn.disabled = true;
+
+    /*
+     * API CALL: DELETE /api/docs/:id
+     * Header: Authorization: Bearer <token>
+     * Response: { success, message }
+     */
+    const res = await api('/docs/' + id, 'DELETE');
+    if (res.success) {
+      toast('Deleted', 'success');
+      loadMyFiles();
+    } else {
+      toast(res.message || 'Delete failed', 'error');
+      btn.disabled = false;
+    }
+  }
+
+  // ── Share modal ─────────────────────────────────────────────────────────
+  function openShareModal(id) {
+    shareDocId = id;
+    document.getElementById('share-email').value = '';
+    document.getElementById('public-link-input').value = '';
+    document.getElementById('share-confirm-btn').textContent = 'Share';
+    switchShareTab('user');
+    document.getElementById('share-modal').classList.add('open');
+  }
+
+  function closeModal() {
+    document.getElementById('share-modal').classList.remove('open');
+    shareDocId = null;
+  }
+
+  function switchShareTab(tab) {
+    shareTab = tab;
+    document.querySelectorAll('.share-tab').forEach((t, i) => {
+      t.classList.toggle('active', (i === 0 && tab === 'user') || (i === 1 && tab === 'public'));
+    });
+    document.getElementById('share-user-panel').classList.toggle('active', tab === 'user');
+    document.getElementById('share-public-panel').classList.toggle('active', tab === 'public');
+    document.getElementById('share-confirm-btn').textContent = tab === 'public' ? 'Generate link' : 'Share';
+  }
+
+  async function confirmShare() {
+    if (!shareDocId) return;
+
+    if (shareTab === 'user') {
+      const email = document.getElementById('share-email').value.trim();
+      const permission = document.getElementById('share-perm').value;
+      if (!email) return toast('Enter an email', 'error');
+
+      /*
+       * API CALL: POST /api/docs/:id/share
+       * Header: Authorization: Bearer <token>
+       * Body: { type: "user", email, permission }
+       * Response: { success, message }
+       */
+      const res = await api('/docs/' + shareDocId + '/share', 'POST', { type: 'user', email, permission });
+      if (res.success) {
+        toast('Shared with ' + email, 'success');
+        closeModal();
+        loadMyFiles();
+      } else {
+        toast(res.message || 'Share failed', 'error');
+      }
+
+    } else {
+      /*
+       * API CALL: POST /api/docs/:id/share
+       * Header: Authorization: Bearer <token>
+       * Body: { type: "public" }
+       * Response: { success, publicUrl }
+       */
+      const res = await api('/docs/' + shareDocId + '/share', 'POST', { type: 'public' });
+      if (res.success) {
+        document.getElementById('public-link-input').value = res.publicUrl;
+        document.getElementById('share-confirm-btn').textContent = 'Done';
+        loadMyFiles();
+      } else {
+        toast(res.message || 'Could not generate link', 'error');
+      }
+    }
+  }
+
+  function copyPublicLink() {
+    const val = document.getElementById('public-link-input').value;
+    if (!val) return;
+    navigator.clipboard.writeText(val).then(() => toast('Copied', 'success'));
+  }
+
+  // ── API helpers ─────────────────────────────────────────────────────────
+  async function api(path, method = 'GET', body = null) {
+    try {
+      const opts = {
+        method,
+        headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+      };
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(API + path, opts);
+      return await res.json();
+    } catch (e) {
+      return { success: false, message: 'Cannot reach server. Is it running?' };
+    }
+  }
+
+  async function apiForm(path, formData) {
+    try {
+      const res = await fetch(API + path, {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + token },
+        body: formData,
+      });
+      return await res.json();
+    } catch (e) {
+      return { success: false, message: 'Upload failed. Is the server running?' };
+    }
+  }
+
+  // ── Utilities ───────────────────────────────────────────────────────────
+  function fmtBytes(b) {
+    if (b < 1024) return b + ' B';
+    if (b < 1024 * 1024) return (b / 1024).toFixed(1) + ' KB';
+    return (b / (1024 * 1024)).toFixed(1) + ' MB';
+  }
+
+  function fmtDate(d) {
+    return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+  }
+
+  function toast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = 'show ' + type;
+    clearTimeout(t._timer);
+    t._timer = setTimeout(() => t.className = '', 3000);
+  }
+
+  // Close modal on backdrop click
+  document.getElementById('share-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeModal();
+  });
+</script>
+</body>
+</html>
